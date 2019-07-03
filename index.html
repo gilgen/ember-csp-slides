@@ -27,18 +27,6 @@ URL: https://code.google.com/p/io-2012-slides
 
 <slides class="layout-widescreen">
 
-  <!-- <slide class=" nobackground"> -->
-  <!--   <article class="flexbox vcenter"> -->
-  <!--     <span><img src="images/ember-banner.jpg"></span> -->
-  <!--     <br /> -->
-  <!--     <br /> -->
-  <!--     <br /> -->
-  <!--     <h2>Packaging Ember Libraries</h2> -->
-  <!--     <br /> -->
-  <!--     <br /> -->
-  <!--     <h5>Presented by: <a style="border: none" href="https://twitter.com/jamiebikies">@jamiebikies</a></h5> -->
-  <!--   </article> -->
-  <!-- </slide> -->
 
   <slide class="title-slide segue nobackground">
     <aside class="gdbar"><img src="images/ember.png"></aside>
@@ -46,6 +34,9 @@ URL: https://code.google.com/p/io-2012-slides
     <hgroup class="auto-fadein">
       <h1 data-config-title><!-- populated from slide_config.json --></h1>
       <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
+      <p>
+      <img style="width:20%" src="https://snappies.s3.amazonaws.com/Image_2av0DD3dkg.png">
+      </p>
       <p data-config-presenter><!-- populated from slide_config.json --></p>
       <a style="font-size: 0.6em; border: none" href="https://twitter.com/jamiebikies">@jamiebikies</a>
       <br />
@@ -55,540 +46,300 @@ URL: https://code.google.com/p/io-2012-slides
 
   <slide>
     <hgroup>
-      <h2>Good libraries have...</h2>
+      <h2>First: What's the problem?</h2>
 
     </hgroup>
     <article class="bigger">
       <ul class="build">
-        <li>Distinct architecture</li>
-        <li>Release management</li>
-        <li>Test suite</li>
-        <li>
-          <p>I'll be using my Ember Pusher library as an example:</p>
-          <a href="https://github.com/jamiebikies/ember-pusher">
-            https://github.com/jamiebikies/ember-pusher
-          </a>
-        </li>
+        <li>We are imperfect</li>
+        <li>There people that take advantage of our imperfections</li>
       </ul>
     </article>
   </slide>
 
   <slide>
     <hgroup>
-      <h2>Architecture: Modules</h2>
+    <h2>Second: How do we deal with this problem?</h2>
+
+    </hgroup>
+    <article class="bigger">
+      <ul class="build">
+        <li>Try our very best to be perfect</li>
+        <li>Acknowledge that front end security matters</li>
+        <li>Acknowledge that because of our imperfections, you may inadvertantly deploy front-end code with security issues</li>
+        <li>Acknowledge that sometimes you need a little help from a friend</li>
+        <li>named Content Security Policy (CSP)</li>
+      </ul>
+    </article>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>What is a Content Security Policy?</h2>
     </hgroup>
     <article>
-      <ul class="buildfff">
-        <li>Javascript modules are currently all over the map</li>
-        <li>People use RequireJS (AMD), CommonJS, other, or nothing</li>
+      <ul class="build">
+        <li>Canonical declaration of external resources</li>
+        <li>Supports many different types of external resource types and specifiers</li>
         <li>
-          ECMAScript 6 is going to have module support built in.
-          <a href="http://wiki.ecmascript.org/doku.php?id=harmony:modules">Check it out</a>
+          Specification:<br>
+          <a href="https://content-security-policy.com/">
+            https://content-security-policy.com/
+          </a>
         </li>
-        <li>Wouldn't be be cool to use ES6 today?</li>
-        <li>
-          We can!
-          <a href="https://github.com/square/es6-module-transpiler">https://github.com/square/es6-module-transpiler</a>
-        </li>
-        <li>es6-module-transpiler compiles ("transpiles") your library written in schnazzy ES6 out into the various module systems used today</li>
-        <li>grunt-microlib pulls in es6-module-transpiler and provides other goodies as well, such as...</li>
+        <li>Some examples of resource types are: image-src, script-src, style-src, media-src, etc</li>
+        <li>Some examples of resource specifiers are 'self', uri, data:, unsafe-inline, unsafe-eval, etc</li>
       </ul>
     </article>
   </slide>
 
   <slide>
     <hgroup>
-      <h2>Architecture: ES6 example...</h2>
+      <h2>How does a CSP prevent attacks?</h2>
+    </hgroup>
+    <article>
+      <ul class="build">
+        <li>The CSP acts as a kind of firewall against anything other than whitelisted resources</li>
+        <li>If Ember had a bug (GASP!) which allowed a user to inject malicious javascript cross site...</li>
+        <li>CSP would be like..</li>
+        <li><img src="https://snappies.s3.amazonaws.com/giphy.gif" /></li>
+      </ul>
+    </article>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>So you see...</h2>
+    </hgroup>
+    <article>
+      <ul class="build">
+        <li>You can be imperfect, and CSP has your back</li>
+        <li>Isn't that comforting?</li>
+      </ul>
+    </article>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>How do I use CSP?</h2>
     </hgroup>
     <article >
-      <pre class="prettyprint" data-lang="javascript">
-var global = (typeof window !== 'undefined') ? window : {},
-    Ember = global.Ember;
-
-var ClientEvents = Ember.Mixin.create({
-
-  needs: 'pusher',
-
-  // Fire an event programmatically. All Events must unfortunately use
-  // the client-<eventname> format for client events (a pusher restriction).
-  pusherTrigger: function(channelName, eventName, data) {
-    var channel = this.get('controllers.pusher').channelFor(channelName);
-    channel.trigger(eventName, data);
-  }
-
-});
-
-export { ClientEvents };
-</pre>
-    </article>
-  </slide>
-
-
-  <slide>
-    <hgroup>
-      <h2>Architecture: AMD transpilation</h2>
-    </hgroup>
-    <article class="smaller">
-      <pre class="prettyprint" data-lang="javascript">
-define("ember-pusher/client_events",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-    var global = (typeof window !== 'undefined') ? window : {},
-        Ember = global.Ember;
-
-    var ClientEvents = Ember.Mixin.create({
-
-      needs: 'pusher',
-
-      // Fire an event programmatically. All Events must unfortunately use
-      // the client-<eventname> format for client events (a pusher restriction).
-      pusherTrigger: function(channelName, eventName, data) {
-        var channel = this.get('controllers.pusher').channelFor(channelName);
-        channel.trigger(eventName, data);
-      }
-
-    });
-
-
-    __exports__.ClientEvents = ClientEvents;
-  });
-</pre>
-    </article>
-  </slide>
-
-
-    <slide>
-    <hgroup>
-      <h2>Architecture: CommonJS transpilation</h2>
-    </hgroup>
-    <article class="smaller">
-      <pre class="prettyprint" data-lang="javascript">
-"use strict";
-var global = (typeof window !== 'undefined') ? window : {},
-    Ember = global.Ember;
-
-var ClientEvents = Ember.Mixin.create({
-
-  needs: 'pusher',
-
-  // Fire an event programmatically. All Events must unfortunately use
-  // the client-<eventname> format for client events (a pusher restriction).
-  pusherTrigger: function(channelName, eventName, data) {
-    var channel = this.get('controllers.pusher').channelFor(channelName);
-    channel.trigger(eventName, data);
-  }
-
-});
-
-exports.ClientEvents = ClientEvents;
-</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Architecture: grunt-microlib</h2>
-    </hgroup>
-    <article>
-      <ul class="buildfff">
-        <li>grunt-microlib is super handy, it can...</li>
-        <li>uglify</li>
-        <li>minify</li>
-        <li>concat</li>
-        <li>transpile</li>
-        <li>run automated stupidity checks. ie: jshint</li>
-        <li>It does the things you'll need to build your library for production</li>
-      </ul>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Test Suite</h2>
-      <!-- <h3>Subtitle Placeholder</h3> -->
-    </hgroup>
-    <article class="smaller">
-      <ul class="buildfff">
-        <li>Mocha works well for my needs</li>
-        <li>Suite hooks into grunt-microlib via the <b>test</b> task</li>
-        <li>Easy to run tests automatically for TDD, or whatever you're into</li>
-        <li>Tests follow familiar format:</li>
+      <ul class="build">
+        <li>There's an ember library available for you, you can use it to define your app's CSP
+          on a per-environment basis
+        </li>
         <li>
-              <pre class="prettyprint" data-lang="javascript">
-  describe("wire", function() {
-    it("initializes channelName in the bindings hash", function() {
-      assert.ok(pusherController.get('bindings')[channelName], "Creates a channel name");
-    });
-
-    it("initializes eventBindings in the bindings hash", function() {
-      var targetId = targetController._pusherEventsId();
-      assert.ok(
-        bindings[channelName].eventBindings[targetId].length == 2,
-        "Knows about two bound events"
-      );
-    });
-  });
-...
-</pre></li>
-      </ul>
-    </article>
-  </slide>
-
-
-    <slide>
-    <hgroup>
-      <h2>Test Suite: A Run</h2>
-    </hgroup>
-    <article class="smaller">
-      <pre>
-jgilgen@muddy[~/projects/ember-pusher (master)] >>>> grunt test
-Running "mocha_phantomjs:phantom" (mocha_phantomjs) task
-DEBUG: -------------------------------
-DEBUG: Ember.VERSION : 1.0.0
-DEBUG: Handlebars.VERSION : 1.0.0
-DEBUG: jQuery.VERSION : 1.10.2
-DEBUG: -------------------------------
-
-  Controller
-    sanity
-      ✓ exists
-      ✓ initializes the bindings object properly
-    wire
-      ✓ initializes channelName in the bindings hash
-      ✓ initializes eventBindings in the bindings hash
-    socketId
-      ✓ sets a socket ID
-    channelFor
-      ✓ returns a channel object
-
-
-  ✔ 6 tests complete (203 ms)
-
-Done, without errors.
-</pre>
-    </article>
-  </slide>
-
-
-
-  <slide>
-    <hgroup>
-      <h2>Release Management</h2>
-    </hgroup>
-    <article>
-      <ul class="buildfff">
-        <li>I don't want to maintain links in a README</li>
-        <li>I don't want to maintain links on a site</li>
-        <li>I don't want to manually upload a file to S3</li>
-        <li>I don't want to have dist files in the repo</li>
-        <li>I only want the dist files to be uploaded when I'm pushing to a certain branch</li>
-        <li>This is a bit magical</li>
-        <li>Use Travis to upload the file to S3 for you on successful build!</li>
-        <li>Yep, you can do that...</li>
-      </ul>
-    </article>
-  </slide>
-
-    <slide>
-    <hgroup>
-      <h2>Release Management: Uploading</h2>
-    </hgroup>
-    <article class="smaller">
-
-      <ul class="buildfff">
-        <li>
-          <a href="https://github.com/pifantastic/grunt-s3#alternative-ways-of-including-your-s3-configuration">
-            https://github.com/pifantastic/grunt-s3#alternative-ways-of-including-your-s3-configuration
+          <a href="https://github.com/rwjblue/ember-cli-content-security-policy">
+            https://github.com/rwjblue/ember-cli-content-security-policy
           </a>
         </li>
-        <li>grunt-s3 will use AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables</li>
-        <li>Travis supports encrypted env variable setup so you don't have to commit secret keys the repo (which would be silly)</li>
+      </ul>
+    </article>
+  </slide>
+
+
+  <slide>
+    <hgroup>
+      <h2>Using CSP in your Ember app</h2>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint">
+        ember install ember-cli-content-security-policy
+      </pre>
+      <pre class="prettyprint" data-lang="javascript">
+
+// config/environment.js
+ENV.contentSecurityPolicy = {
+  // Deny everything by default
+  'default-src': "'none'",
+  
+  // Allow scripts at https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js
+  'script-src': ["'self'", "https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"],
+
+  // ...
+  
+  // Omit `media-src` from policy
+  // Browser will fallback to default-src for media resources (which is 'none', see above)
+  'media-src': null
+};
+      </pre>
+    </article>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>Delivery of your CSP</h2>
+    </hgroup>
+    <article >
+      <ul class="build">
+        <li>Two different method of delivery, but really just one you should use in production</li>
+        <li>Header</li>
+        <li>HTML &lt;meta&gt; tag</li>
+        <li>In development, using the ember addon you can set the delivery method to be via meta tag:</li>
         <li>
-          <pre prettyprint data-lang="shell">
-travis encrypt AWS_ACCESS_KEY_ID=your_access_id
-travis encrypt AWS_SECRET_ACCESS_KEY=your_scret_key
-</pre>
+          <pre class="prettyprint" data-lang="javascript">
+if (environment === 'development') {
+  contentSecurityPolicyHeader: 'Content-Security-Policy',
+  ENV.contentSecurityPolicyMeta = true;
+
+  // ...
+          </pre>
         </li>
-        <li>The output of which you add to your .travis file and bam.</li>
-        <li>Now Travis can upload your dist files to S3 on your behalf as part of a successful build. Wow!</li>
+
       </ul>
     </article>
   </slide>
 
-
-
-    <slide>
+  <slide>
     <hgroup>
-      <h2>Test Suite: A .travis example</h2>
+      <h2>Delivery of your CSP (continued)</h2>
     </hgroup>
     <article class="smaller">
-      <pre>
-language: node_js
-node_js:
-- '0.10'
-before_install:
-- npm install -g grunt-cli
-after_success: grunt build s3
-<b>
-env:
-  global:
-  - secure: lHZs5OSYzk78hQmSr2KrsFQl+J/Zrt/MUDd0dqiCPmoIdU5855Kn0OguztG5GM+0fIdSfbDxKNv0ZgtdULStvtyrRmFLGbKSvK/VLpUrsGpSoAN0b0t35FpHAQVKnPUB9yWm2+Vy3O6Bt8Et0lfrvuhh5k6w2rmtDwItcqsQcdE=
-  - secure: qVNohfq19RIk+Ay427U9UEWtoloqeCLkj4wbFmG7VSV6KitzX+zvP36VmhxfXPnJhXua0Lh1Df75g916x9De9y4Q79gP1ImC/2udx0GJz5oiyEERHzsD480adTG0nWC2YOW+KliAAEl4aLTtT4RAu8b2MPq7Z6MgBXbAOZ4+ykU=
-</b>
-</pre>
-    <p>Your dist files on S3</p>
-    <img src="images/distfiles.png" />
-    </article>
-  </slide>
+      <ul class="buildff">
+        <li>You really will want to use a header based delivery for production</li>
+        <li>Certain CSP definitions are not supported in the meta tag delivery</li>
+        <li>... such as frame-ancestors</li>
+        <li>The Ember addon provides a way to export a header for use in Nginx or Apache</li>
+        <li>
+          <pre class="prettyprint" data-lang="shell">
+>>>> ember csp-headers --environment production
+# Content Security Policy Header Configuration
+#
+# for Apache: Header set Content-Security-Policy-Report-Only "..."
+# for Nginx : add_header Content-Security-Policy-Report-Only "...";
 
-
-    <slide>
-    <hgroup>
-      <h2>Test Suite: A README.md example</h2>
-    </hgroup>
-    <article>
-    <p>Your README.md:</p>
-<pre class="prettyprint" data-lang="markdown">
-### Download
-- [ember-pusher.js](https://ember-pusher-builds.s3.amazonaws.com/ember-pusher.js)
-- [ember-pusher.min.js](https://ember-pusher-builds.s3.amazonaws.com/ember-pusher.min.js)
-- [ember-pusher.amd.js](https://ember-pusher-builds.s3.amazonaws.com/ember-pusher.amd.js)
-</pre>
-    </article>
-  </slide>
-
-
-  <slide hidden>
-    <hgroup>
-      <h2>Slide with (Smaller Font)</h2>
-    </hgroup>
-    <article class="smaller">
-      <ul>
-        <li>All <a href="http://google.com">links</a> open in new tabs.</li>
-        <li>To change that this, add <code>target="_self"</code> to the link.</li>
+default-src 'none'; base-uri 'none'; form-action 'self'; child-src 'self'; ...
+          </pre>
+          <pre class="prettyprint" data-lang="shell">
+# nignx.conf location{} block
+add_header 'Content-Security-Policy' "default-src 'none'; base-uri' ...
+          </pre>
+        </li>
       </ul>
     </article>
   </slide>
 
-  <slide hidden>
-    Hidden slides are left out of the presentation.
-  </slide>
-
-
-  <slide hidden>
-    <aside class="note">
-      <section>
-        <ul>
-          <li>Point I wanted to make #1</li>
-          <li>Point I wanted to make #2</li>
-          <li>Point I wanted to make #3</li>
-          <li>Example <a href="#">link</a> in notes.</li>
-        </ul>
-        <p><b>Remember to say this tag line!</b></p>
-      </section>
-    </aside>
+  <slide>
     <hgroup>
-      <h2>Slide with Speaker Notes</h2>
+      <h2>What do you see in the browser?</h2>
     </hgroup>
     <article>
-      <p>Press 'p' to toggle speaker notes.</p>
+      <ul class="buildfff">
+        <li>Any elements of your front-end app that go against your CSP are simply blocked</li>
+        <li>
+          <img src="https://snappies.s3.amazonaws.com/Image_kJ8AYzOVTd.png" />
+        </li>
+      </ul>
     </article>
   </slide>
 
-  <slide hidden>
-    <aside class="note">
-      <section>
-        <ul>
-          <li>See this amazing link: <a href="http://www.google.com">link</a>.</li>
-        </ul>
-        <p><b>Remember to say this tag line!</b></p>
-      </section>
-    </aside>
+  <slide>
     <hgroup>
-      <h2>Presenter Mode</h2>
+      <h2>CSP for mature applications</h2>
     </hgroup>
     <article>
-      <p>Add <code><a href="?presentme=true" target="_self">?presentme=true</a></code> to the URL to enabled presenter mode.
-      This setting is sticky, meaning refreshing the page will persist presenter
-      mode.</p>
-      <p>Hit <code><a href="?presentme=false" target="_self">?presentme=false</a></code> to disable presenter mode.</p>
+      <ul class="buildfff">
+        <li>It's a risky proposition...</li>
+        <li>What if you think you whitelisted all resources that you application references, but missed a few?</li>
+        <li>The client experience would be broken and you would have no idea about that the error happened, unless the user emails you.</li>
+        <li>Which they rarely do...</li>
+        <li>Content-Security-Policy-Report-Only mode to the rescue!</li>
+        <li>
+          <pre class="prettyprint" data-lang="shell">
+  Content-Security-Policy-Report-Only: ... /csp-violation-report-endpoint/
+          </pre>
+        </li>
+      </ul>
     </article>
   </slide>
 
-  <slide hidden>
+  <slide>
     <hgroup>
-      <h2>Slide with Image</h2>
+      <h2>CSP for mature applications (cont.)</h2>
     </hgroup>
     <article>
-      <img src="images/chart.png" class="reflect" alt="Description" title="Description">
-      <footer class="source">source: place source info here</footer>
+      <ul class="buildfff">
+        <li>Report only mode causes a POST request with the CSP infraction to be sent to the defined endpoint</li>
+        <pre class="prettyprint">
+{
+  "csp-report": {
+    "document-uri": "http://example.com/signup.html",
+    "referrer": "",
+    "blocked-uri": "http://example.com/css/style.css",
+    "violated-directive": "style-src cdn.example.com",
+    "original-policy": "default-src ... report-uri /_/csp-reports",
+    "disposition": "report"
+  }
+}
+        </pre>
+        <li>
+          Make an API endpoint to receive this data and store it in a manner you see fit (DB, filesystem, etc)
+        </li>
+      </ul>
     </article>
   </slide>
 
-  <slide hidden>
+  <slide>
     <hgroup>
-      <h2>Slide with Image (Centered horz/vert)</h2>
-    </hgroup>
-    <article class="flexbox vcenter">
-      <img src="images/barchart.png" alt="Description" title="Description">
-      <footer class="source">source: place source info here</footer>
-    </article>
-  </slide>
-
-  <slide hidden>
-    <hgroup>
-      <h2>Table Option A</h2>
-      <h3>Subtitle Placeholder</h3>
+      <h2>CSP for mature applications (cont.)</h2>
     </hgroup>
     <article>
-      <table>
-        <tr>
-          <th></th><th>Column 1</th><th>Column 2</th><th>Column 3</th><th>Column 4</th>
-        </tr>
-        <tr>
-          <td>Row 1</td><td>placeholder</td><td class="highlight">placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 2</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 3</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 4</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 5</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-      </table>
+      <ul class="buildfff">
+        <li>You then monitor your endpoint</li>
+        <li>Add any CSP violations that you discover you missed</li>
+        <li>When all is well, remove the -Report-Only part of the header!</li>
+      </ul>
     </article>
   </slide>
 
-  <slide hidden>
+  <slide>
     <hgroup>
-      <h2>Table Option A (Smaller Text)</h2>
-      <h3>Subtitle Placeholder</h3>
-    </hgroup>
-    <article class="smaller">
-      <table>
-        <tr>
-          <th></th><th>Column 1</th><th>Column 2</th><th>Column 3</th><th>Column 4</th>
-        </tr>
-        <tr>
-          <td>Row 1</td><td>placeholder</td><td class="highlight">placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 2</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 3</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 4</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 5</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-      </table>
-    </article>
-  </slide>
-
-  <slide hidden>
-    <hgroup>
-      <h2>Table Option B</h2>
-      <h3>Subtitle Placeholder</h3>
+      <h2>Checking your front-end security situation</h2>
     </hgroup>
     <article>
-      <table class="rows">
-        <tr>
-          <th>Header 1</th><td>placeholder</td><td class="highlight">placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <th>Header 2</th><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <th>Header 3</th><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <th>Header 4</th><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <th>Header 5</th><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-      </table>
+      <ul class="buildfff">
+        <li>
+          <a href="https://observatory.mozilla.org/analyze/app.crowdmark.com">
+            Mozilla Observatory
+          </a>
+        </li>
+        <li>
+          <img src="https://snappies.s3.amazonaws.com/Mozilla_Observatory__Scan_Results_for_app.crowdmark.com_2019-05-02_18-12-30.png">
+        </li>
+      </ul>
     </article>
   </slide>
 
-  <slide hidden>
+  <slide>
     <hgroup>
-      <h2>Slide Styles</h2>
-    </hgroup>
-    <article class="smaller">
-      <div class="columns-2">
-        <ul>
-          <li class="red">class="red"</li>
-          <li class="red2">class="red2"</li>
-          <li class="red3">class="red3"</li>
-          <li class="blue">class="blue"</li>
-          <li class="blue2">class="blue2"</li>
-          <li class="blue3">class="blue3"</li>
-          <li class="green">class="green"</li>
-          <li class="green2">class="green2"</li>
-        </ul>
-        <ul>
-          <li class="green3">class="green3"</li>
-          <li class="yellow">class="yellow"</li>
-          <li class="yellow2">class="yellow2"</li>
-          <li class="yellow3">class="yellow3"</li>
-          <li class="gray">class="gray"</li>
-          <li class="gray2">class="gray2"</li>
-          <li class="gray3">class="gray3"</li>
-          <li class="gray4">class="gray4"</li>
-        </ul>
-      </div>
-      <div class="centered" style="margin-top:2em">
-        I am centered text with a <button>Button</button> and <button disabled>Disabled</button> button.
-      </div>
-    </article>
-  </slide>
-
-  <slide hidden class="segue dark nobackground">
-    <aside class="gdbar"><img src="images/google_developers_icon_128.png"></aside>
-    <hgroup class="auto-fadein">
-      <h2>Segue Slide</h2>
-      <h3>Subtitle Placeholder</h3>
-    </hgroup>
-  </slide>
-
-  <slide hidden class="fill nobackground" style="background-image: url(images/sky.jpg)">
-    <hgroup>
-      <h2 class="white">Full Image (with Optional Header)</h2>
-    </hgroup>
-    <footer class="source white">www.flickr.com/photos/25797459@N06/5438799763/</footer>
-  </slide>
-
-  <slide hidden class="segue dark quote nobackground">
-    <aside class="gdbar right bottom"><img src="images/google_developers_icon_128.png"></aside>
-    <article class="flexbox vleft auto-fadein">
-      <q>
-        This is an example of quote text.
-      </q>
-      <div class="author">
-        Name<br>
-        Company
-      </div>
-    </article>
-  </slide>
-
-  <slide hidden>
-    <hgroup>
-      <h2>Slide with Iframe</h2>
+      <h2>Bonus round</h2>
     </hgroup>
     <article>
-      <iframe data-src="http://www.google.com/doodle4google/resources/history.html"></iframe>
+      <ul class="buildfff">
+        <li>If that wasn't enough...</li>
+        <li>CSP will also prevent your site from becoming a malware vector!</li>
+        <li>Certain organizations have created botnets that utilize injection at the country-firewall level</li>
+        <li>That injection turns your site into a botnet vector</li>
+        <li>Also, less sophisticated malware is stopped in its tracks...</li>
+        <li>
+          <img src="https://snappies.s3.amazonaws.com/Crowdmark_2019-05-02_18-15-55.png">
+        </li>
+      </ul>
     </article>
   </slide>
+
+  <!-- <slide> -->
+  <!--   <hgroup> -->
+  <!--     <h2>Now you're all...</h2> -->
+  <!--   </hgroup> -->
+  <!--   <article> -->
+  <!--     <ul class="buildfff"> -->
+  <!--       <li> -->
+  <!--         <img src="https://snappies.s3.amazonaws.com/giphy_2.gif"> -->
+  <!--       </li> -->
+  <!--     </ul> -->
+  <!--   </article> -->
+  <!-- </slide> -->
 
   <slide hidden>
     <article>
@@ -598,6 +349,7 @@ env:
 
   <slide class="logoslide nobackground">
     <article class="flexbox vcenter">
+      <h3>Thanks!</h3>
       <img style="width: 324px; height: 308px;" src="images/ember.png">
     </article>
   </slide>
