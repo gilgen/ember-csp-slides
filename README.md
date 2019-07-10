@@ -1,4 +1,4 @@
-## Packaging Ember Libraries
+## Content Security Policies
 
 Some slides to go through my method (as at Jan 8, 2014) of packaging Ember libs.
 
